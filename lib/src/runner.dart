@@ -134,11 +134,11 @@ class FTSCommandRunner extends CommandRunner<int> {
 
   Future<void> runFetch() async {
     trace('Creating local canonical json');
-    var masterMap = buildLocalYamlMap();
-    var canoMap = buildCanoMap(masterMap);
+    var masterMap = buildLocalYamlMap();    ///! strings.yaml 파일의 텍스트가 LinkedHashMap(Map에서 따옴표가 없는버전 := json)으로 반환됨.
+    var canoMap = buildCanoMap(masterMap);  ///! map형태로 반환.
     // trace("Map is: ", canoMap);
     // exit(0);
-    buildVarsInMap(canoMap);
+    buildVarsInMap(canoMap);    ///! {{}} 가 없으면 암것도 안함.
     // var _tmp = {'en': canoMap};
     // putVarsInMap(_tmp);
     // if (config.intlEnabled) {
@@ -146,11 +146,11 @@ class FTSCommandRunner extends CommandRunner<int> {
     // }
     // exit(0);
     trace('Fetching data from Google sheets...');
-    final localesMap = await sheet.getData();
+    final localesMap = await sheet.getData();   ///! {ko: {~data~}, ja: {~} ... } // master lang은 없음.
     localesMap[config.masterLocale] = canoMap;
     putVarsInMap(localesMap);
-    createLocalesFiles(localesMap, masterMap);
-    formatDartFiles();
+    createLocalesFiles(localesMap, masterMap);    ///! lib/i18n 에 파일 생성.
+    formatDartFiles();    ///! 포맷 맞춰주는 것 같은데, 명령어 없어서 실행 안함. 안해도 이쁘게 나오는데..
     if (config.hasOutputArbDir) {
       buildArb(localesMap);
     }

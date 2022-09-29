@@ -9,7 +9,7 @@ JsonMap buildLocalYamlMap() {
   var entryFile = config.entryFile;
   trace('Loading entry_file:\n - $entryFile:');
   var parseMap = {};
-  _addDoc(entryFile, parseMap);
+  _addDoc(entryFile, parseMap); ///! parseMap: strings.yaml 파일의 텍스트가 key:value 형태로 담겨서 나옴. 얕은복사!
   return JsonMap.from(parseMap);
   // return _canoMap(parseMap);
 }
@@ -32,6 +32,7 @@ String openYaml(String path) {
   return openString(path);
 }
 
+///! path: strings.yaml 경로.
 void _addDoc(String path, Map into) {
   // var parentDir = io.File(path).parent.path;
   var parentDir = p.dirname(path);
@@ -48,11 +49,13 @@ void _addDoc(String path, Map into) {
   }
 }
 
+///! dir: strings.yaml 가 있는 폴더 경로
+/// doc: strings.yaml 내용
 void _copyDoc(YamlMap doc, String dir, Map into) {
   var unwrapMode = false;
   for (var k in doc.keys) {
     var value = doc[k];
-    if (value is YamlMap) {
+    if (value is YamlMap) {   //! 중첩 Map 타입인 경우로 보임.
       // print('here is: $k // ${value.keys} // $unwrapMode');
       Map target;
       if (!unwrapMode) {
@@ -91,7 +94,7 @@ void _copyDoc(YamlMap doc, String dir, Map into) {
           unwrapMode = value;
         } else {
           // print('$k, $value $unwrapMode');
-          into[k] = value;
+          into[k] = value;    ///! 일반적인 경우 여기로.
         }
       }
     }
@@ -100,7 +103,7 @@ void _copyDoc(YamlMap doc, String dir, Map into) {
 
 Map<String, dynamic> metaProperties = {};
 
-KeyMap _canoMap(Map<String, dynamic> content) {
+KeyMap _canoMap(Map<String, dynamic> content) { ///! content: strings.yaml이 LinkedHashMap(Map에서 따옴표가 없는버전 := json)으로 변환된 파일. => 이걸 Map 으로 받기 가능? ㅇㅇ json이 아님? Map.to는 없음.
   final output = <String, String>{};
 
   void buildKeys(Map<String, dynamic> inner, String prop) {
@@ -116,11 +119,11 @@ KeyMap _canoMap(Map<String, dynamic> content) {
         trace('"$k" has a null value');
       }
       var val = inner[k];
-      var p2 = prop.isEmpty ? k : prop + '.' + k;
+      var p2 = prop.isEmpty ? k : prop + '.' + k; // 항상 "k" 로 반환되는거 아냐?
       if (val is Map) {
         buildKeys(val.cast(), p2);
       } else {
-        output[p2] = val?.toString() ?? ' ';
+        output[p2] = val?.toString() ?? ' ';  // 그럼, { "k": "val" }
       }
     }
   }
@@ -167,7 +170,7 @@ void putVarsInMap(Map<String, Map<String, String>> map) {
   }
 }
 
-void buildVarsInMap(Map<String, String> map) {
+void buildVarsInMap(Map<String, String> map) {  ///! strings.yaml 의 Map 형태. {{}} 가 없으면 암것도 안함.
   var varsKeys = <String, Map<String, String>>{};
   for (var key in map.keys) {
     var val = map[key]!;

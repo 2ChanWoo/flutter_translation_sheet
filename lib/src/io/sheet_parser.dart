@@ -490,7 +490,7 @@ Open $spritesheetUrl and check the available tabs at the bottom.
   }
 
   Future<Map<String, Map<String, String>>> getData() async {
-    if (_sheet == null) await _connect();
+    if (_sheet == null) await _connect();   ///! sheet의 기본 정보들을 가져옴(table 데이터는 아직)
     await _initHeaders();
     // we need keys and other valid locales != master
     // trace('getting data, remote headers: ', remoteHeader, localHeader);
@@ -501,15 +501,15 @@ Open $spritesheetUrl and check the available tabs at the bottom.
     /// TODO: query the rows that we need.
     var ranges = <String>[];
     for (var k in localHeader) {
-      if (k == masterLanguage) continue;
+      if (k == masterLanguage) continue;    ///! master lang 은 제외!
       var col = remoteHeader.indexOf(k) + 1;
       // trace( "key: ", k, " index: ", col , ' col: ', _getColumnLetter(col));
-      var colLetter = _getColumnLetter(col);
-      var range = colLetter + '1:' + colLetter;
+      var colLetter = _getColumnLetter(col);  ///! A,B,C,D .. column을 가짐.
+      var range = colLetter + '1:' + colLetter;   ///! ex) A1:A
       ranges.add(range);
     }
     // var res = await _table.batchGet(['A1:A', 'C1:C', 'E1:E2000']);
-    final result = await _table.batchGet(ranges);
+    final result = await _table.batchGet(ranges);   ///! table data
 
     trace('Remote locales received.');
 
@@ -521,7 +521,7 @@ Open $spritesheetUrl and check the available tabs at the bottom.
     const loadingTranslation = 'Loading...';
 
     /// make the map.
-    var output = <String, Map<String, String>>{};
+    var output = <String, Map<String, String>>{}; ///! {ko: {~data~}, ja: {~} ... } // master lang은 없음.
     var isLoadingTranslations = false;
     var mapLoading = <String, bool>{};
     for (var langCol in result) {

@@ -37,7 +37,7 @@ void loadEnv([String path = defaultConfigEnvPath]) {
   config._configOutputTemplates();
 
   ///'output/assets/l10n'
-  config.entryFile = doc['entry_file'] ?? '';
+  config.entryFile = doc['entry_file'] ?? ''; //strings.yaml
   config.dartOutputDir = doc?['dart']?['output_dir'] ?? '';
   config.dartTKeysId = doc?['dart']?['keys_id'] ?? '';
   config.useDartMaps = doc?['dart']?['use_maps'] ?? false;
@@ -70,7 +70,7 @@ Please, create your data tree.''');
       print('Using config locales:');
       const _sep = ' - ';
       for (var locale in config.locales) {
-        trace(_sep, langInfoFromKey(locale));
+        trace(_sep, langInfoFromKey(locale));// - ko - Korean (한국어)
       }
       // config.locales.removeWhere((element) => element.isEmpty);
       // trace('config locales: ', config.locales);

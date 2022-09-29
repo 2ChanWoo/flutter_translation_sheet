@@ -19,13 +19,13 @@ class LangVo {
 
 /// Generates the json and dart files according to [EnvConfig].
 void createLocalesFiles(
-  Map<String, Map<String, String>> localesMap,
-  Map<String, dynamic> masterMap,
+  Map<String, Map<String, String>> localesMap,  ///! 번역 (kr, ja)
+  Map<String, dynamic> masterMap,               ///! master lang data
 ) {
   var dartExportPaths = <String>[];
   if (config.validTKeyFile) {
     dartExportPaths.add(config.dartTkeysPath);
-    createTKeyFileFromMap(masterMap, save: true, includeToString: true);
+    createTKeyFileFromMap(masterMap, save: true, includeToString: true);    ///!  lib/i18n 에 t_keys.json 파일 생성.
   }
 
   /// collect imports for the output.
@@ -44,7 +44,7 @@ void createLocalesFiles(
 
     /// save json files.
     if (saveJsonLocales) {
-      saveLocaleJsonAsset(
+      saveLocaleJsonAsset(    ///!  assets/i18n 에 locale.json 파일 생성.
         localeName,
         localeMap,
         beautify: true,
@@ -52,7 +52,7 @@ void createLocalesFiles(
     }
 
     /// save dart file.
-    if (config.useDartMaps && config.validTranslationFile) {
+    if (config.useDartMaps && config.validTranslationFile) {    ///! locale.dart 파일 생성.
       /// Dart translation file.
       var data = prettyJson(localeMap);
 
@@ -70,14 +70,14 @@ abstract class $className {
 ''';
       var fileName = localeName.toLowerCase().snakeCase + '.dart';
       var filePath = joinDir([config.dartOutputDir, fileName]);
-      saveString(filePath, fileData);
+      saveString(filePath, fileData);     ///! 파일생성
       translateImports.add('import "$fileName";');
       translateLines.add('\t\t"$localeName": $className.data,');
     }
   }
 
   /// create translation and locale file
-  if (config.validTranslationFile) {
+  if (config.validTranslationFile) {  /// lib/i18n 에 t_data.dart 파일 생성.
     createTranslationFile(
       config.locales,
       save: true,

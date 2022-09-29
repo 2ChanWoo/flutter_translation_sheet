@@ -1291,9 +1291,9 @@ class Worksheet {
     var _ranges = List.from(obj['valueRanges']);
     var output = <List<String>>[];
     _ranges.forEach((e) {
-      var values = e['values'][0];
+      var values = e['values'][0];  ///! 번역 테이블 column data list
       if (values is List) {
-        output.add(values.map<String>((e) => '$e').toList());
+        output.add(values.map<String>((e) => '$e').toList());   ///! 번역파일을 list<List<String>> 으로 저장.
       } else {
         print('Error with values: $values');
       }

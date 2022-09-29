@@ -74,7 +74,7 @@ class FetchCommand extends Command<int> {
   @override
   Future<int> run() async {
     setConfig(argResults!);
-    await exec();
+    await exec(); // runner.dart 에서 run~() 메서드들
     return 0;
   }
 }
@@ -178,7 +178,7 @@ https://github.com/roipeker/flutter_translation_sheet/wiki/Google-credentials
 void addConfigOption(ArgParser argParser) {
   argParser.addOption(
     'config',
-    abbr: 'c',
+    abbr: 'c',  // defaultsTo: 'trconfig.yaml'
     valueHelp: 'trconfig.yaml path',
     help: 'Set the trconfig.yaml path to process',
     defaultsTo: 'trconfig.yaml',
@@ -190,9 +190,16 @@ void setConfig(ArgResults res) {
   if (res.wasParsed('config')) {
     startConfig(res['config']);
   } else {
-    startConfig('trconfig.yaml');
+    startConfig('trconfig.yaml'); // ㄱㅣ본값으로 설정되어 있음.
   }
 }
+
+/**
+ * addConfigOption 와 setConfig 를 보니,
+ * config가 디폴트로 설정되어 있긴 한데,
+ * 명령어에 직접 적지 않으면 wasParsed에 걸리진 않는 느낌...? 아닌가? 항상 걸리는데 코드가 약간 잘 못 되어 있는 걸 수도..
+ *  ㄴ> 직접해보면 안걸리는거 같음..
+ * */
 
 /// Initializes the supplied configuration from [path]
 void startConfig(String path) {
