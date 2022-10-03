@@ -79,6 +79,27 @@ class FetchCommand extends Command<int> {
   }
 }
 
+/// Command logic for `fts getAll`
+class GetAll extends Command<int> {
+  @override
+  final String description = 'getAll the data from the sheet';
+
+  @override
+  final String name = 'getAll';
+  final Future Function() exec;
+
+  GetAll(this.exec) {
+    addConfigOption(argParser);
+  }
+
+  @override
+  Future<int> run() async {
+    setConfig(argResults!);
+    await exec(); // runner.dart 에서 run~() 메서드들
+    return 0;
+  }
+}
+
 /// Command logic for `fts upgrade`
 class UpgradeCommand extends Command<int> {
   @override
