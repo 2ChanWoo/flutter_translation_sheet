@@ -24,6 +24,7 @@ class FTSCommandRunner extends CommandRunner<int> {
         ) {
     instance = this;
     addCommand(FetchCommand(startFetch));
+    addCommand(GetAll(startFetchWithMasterLang));
     addCommand(RunCommand(startRun));
     addCommand(UpgradeCommand(checkUpdate));
 
@@ -78,6 +79,14 @@ class FTSCommandRunner extends CommandRunner<int> {
 
   /// executes the logic for `fts fetch`
   Future<void> startFetch() async {
+    await runFetch();
+    exit(1);
+  }
+
+  /// executes the logic for `fts fetchwith`
+  Future<void> startFetchWithMasterLang() async {
+    await createStrings();
+    print("------------------Created strings.yaml-------------------");
     await runFetch();
     exit(1);
   }
@@ -158,5 +167,42 @@ class FTSCommandRunner extends CommandRunner<int> {
     /// add locales in iOS
     addLocalesInPlist();
     flutterHotReload();
+  }
+
+  Future<void> createStrings() async {
+
+    final stringsData = await sheet.getMasterLangData();
+    // print(">>>>>>>>>>> $stringsData");
+    createStringsYaml(stringsData);
+
+    // trace('Creating local canonical json');
+    // var masterMap = buildLocalYamlMap();    ///! strings.yaml 파일의 텍스트가 LinkedHashMap(Map에서 따옴표가 없는버전 := json)으로 반환됨.
+    // var canoMap = buildCanoMap(masterMap);  ///! map형태로 반환.
+    // // trace("Map is: ", canoMap);
+    // // exit(0);
+    // buildVarsInMap(canoMap);    ///! {{}} 가 없으면 암것도 안함.
+    // // var _tmp = {'en': canoMap};
+    // // putVarsInMap(_tmp);
+    // // if (config.intlEnabled) {
+    // //   buildArb(_tmp);
+    // // }
+    // // exit(0);
+    // trace('Fetching data from Google sheets...');
+    // final localesMap = await sheet.getData();   ///! {ko: {~data~}, ja: {~} ... } // master lang은 없음.
+    //
+    // final stringsData = await sheet.getMasterLangData();
+    // print(stringsData);
+    //
+    // localesMap[config.masterLocale] = canoMap;
+    // putVarsInMap(localesMap);   ///! 넘어감
+    // createLocalesFiles(localesMap, masterMap);    ///! lib/i18n 에 파일 생성.
+    // formatDartFiles();    ///! 포맷 맞춰주는 것 같은데, 명령어 없어서 실행 안함. 안해도 이쁘게 나오는데..
+    // if (config.hasOutputArbDir) {
+    //   buildArb(localesMap);
+    // }
+    //
+    // /// add locales in iOS
+    // addLocalesInPlist();
+    // flutterHotReload();
   }
 }

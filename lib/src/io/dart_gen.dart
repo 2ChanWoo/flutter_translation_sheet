@@ -94,6 +94,20 @@ abstract class $className {
   }
 }
 
+///!
+void createStringsYaml(List<List<String>> list) {
+  if(list.length != 2) return;
+
+  String content = '';
+  for(int i=0; i < list[0].length; i++) {
+      if(i==0) continue;
+
+      content = content + '${list[0][i]}: '+'\"${list[1][i]}\"\n';
+  }
+
+  saveString(config.entryFile, content);
+}
+
 /// Generates the export file with the TKeys and TData files.
 void createDartExportFile(List<String> exportPaths) {
   final dir = config.dartOutputDir;

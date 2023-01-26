@@ -489,6 +489,40 @@ Open $spritesheetUrl and check the available tabs at the bottom.
     // trace(remoteMap);
   }
 
+  Future<List<List<String>>> getMasterLangData() async {
+    if (_sheet == null) await _connect();   ///! sheet의 기본 정보들을 가져옴(table 데이터는 아직)
+    await _initHeaders();
+    // we need keys and other valid locales != master
+    // trace('getting data, remote headers: ', remoteHeader, localHeader);
+    // trace('master', masterLanguage, masterLanguageCol);
+
+    trace('Requesting translated locales from GSheet ...');
+
+    /// TODO: query the rows that we need.
+    var ranges = <String>[];
+    for (var k in localHeader) {
+      if (k == masterLanguage || k =='keys' ) {
+        ///! master lang 은 제외! <<<<<<<<<<<<<<<<<< 요기만 수정.
+        var col = remoteHeader.indexOf(k) + 1;
+        // trace( "key: ", k, " index: ", col , ' col: ', _getColumnLetter(col));
+        var colLetter = _getColumnLetter(col);  ///! A,B,C,D .. column을 가짐.
+        var range = colLetter + '1:' + colLetter;   ///! ex) A1:A
+        ranges.add(range);
+      }
+    }
+    // var res = await _table.batchGet(['A1:A', 'C1:C', 'E1:E2000']);
+    final result = await _table.batchGet(ranges);   ///! table data
+
+    trace('Remote locales received.');
+
+    /// assure keys is 1st in list.
+    var keys = result.firstWhere((element) => element[0] == 'keys');
+    //keys.removeAt(0);
+    // result.remove(keys);
+    return result;
+
+  }
+
   Future<Map<String, Map<String, String>>> getData() async {
     if (_sheet == null) await _connect();   ///! sheet의 기본 정보들을 가져옴(table 데이터는 아직)
     await _initHeaders();
