@@ -1,11 +1,10 @@
 import 'dart:io';
 
-import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
-import 'package:args/src/arg_parser.dart';
 import 'package:dcli/dcli.dart';
 import 'package:flutter_translation_sheet/flutter_translation_sheet.dart';
-
+import 'package:yaml/yaml.dart';
+import 'package:path/path.dart' as p;
 import '../runner.dart';
 
 /// Command logic for `fts extract`
@@ -20,7 +19,19 @@ class ExtractStringCommand extends Command<int> {
   ExtractStringCommand(this.exec) {
     argParser.addOption('path',
         abbr: 'p',
-        help: 'Set the /lib folder to search for Strings in dart files.');
+        help:
+            'Path used to search for strings (recursive), for example, pass the /lib folder to search for Strings in dart files.');
+    argParser.addOption('exclude',
+        defaultsTo: null,
+        abbr: 'r',
+        help:
+            'Comma separated list of files and folders to be excluded from the extraction.');
+
+    argParser.addFlag('clean',
+        defaultsTo: false,
+        abbr: 'c',
+        help: 'Clean results, preventing duplicates');
+
     argParser.addOption('output',
         defaultsTo: 'strings.yaml',
         abbr: 'o',
@@ -34,7 +45,7 @@ class ExtractStringCommand extends Command<int> {
         abbr: 's',
         help:
             'Toggles permissive mode, capturing strings without spaces in it.');
-    addConfigOption(argParser);
+    // addConfigOption(argParser);
   }
 
   @override
@@ -49,6 +60,12 @@ class ExtractStringCommand extends Command<int> {
     }
     if (argResults!.wasParsed('permissive')) {
       extractPermissive = argResults!['permissive']!;
+    }
+    if (argResults!.wasParsed('exclude')) {
+      extractExcludePaths = argResults!['exclude']!;
+    }
+    if (argResults!.wasParsed('clean')) {
+      extractCleanResults = argResults!['clean']!;
     }
     if (argResults!.wasParsed('path')) {
       libFolder = argResults!['path']!.trim();
@@ -73,6 +90,7 @@ class FetchCommand extends Command<int> {
 
   @override
   Future<int> run() async {
+    readPubSpec();
     setConfig(argResults!);
     await exec(); // runner.dart 에서 run~() 메서드들
     return 0;
@@ -118,11 +136,34 @@ class UpgradeCommand extends Command<int> {
   }
 }
 
+/// Command logic for `fts locales`
+class LocaleSelectionCommand extends Command<int> {
+  @override
+  final String description = 'Shows the list of supported languages codes for GoogleTranslate';
+
+  @override
+  final String name = 'locales';
+  final Future Function() exec;
+
+  LocaleSelectionCommand(this.exec) {
+    addConfigOption(argParser);
+  }
+
+  @override
+  Future<int> run() async {
+    readPubSpec();
+    setConfig(argResults!);
+    await exec();
+    return 0;
+  }
+}
+
+
 /// Command logic for `fts run`
 class RunCommand extends Command<int> {
   @override
   final String description =
-      'Runs the strings parsing, starts the sync process with GoogleSheet, fetches the translations, and generates the files.';
+      '(default) Runs the strings parsing, starts the sync process with GoogleSheet, fetches the translations, and generates the files.';
 
   @override
   final String name = 'run';
@@ -206,14 +247,6 @@ void addConfigOption(ArgParser argParser) {
   );
 }
 
-/// Reads the `config` from [res]
-void setConfig(ArgResults res) {
-  if (res.wasParsed('config')) {
-    startConfig(res['config']);
-  } else {
-    startConfig('trconfig.yaml'); // ㄱㅣ본값으로 설정되어 있음.
-  }
-}
 
 /**
  * addConfigOption 와 setConfig 를 보니,
@@ -222,10 +255,81 @@ void setConfig(ArgResults res) {
  *  ㄴ> 직접해보면 안걸리는거 같음..
  * */
 
+/// Reads the `config` from [res]
+void setConfig(ArgResults res) {
+  if (res.wasParsed('config')) {
+    startConfig(res['config']);
+  } else {
+    readPubSpec();
+    var ftsKey = pubSpecMap['fts'];
+    if (ftsKey != null) {
+      if (ftsKey is String) {
+        /// path.
+        startConfig(ftsKey);
+      } else if (ftsKey is YamlMap) {
+        /// map.
+        loadEnv(parsedDoc: ftsKey);
+      } else {
+        error("Invalid `fts` key in pubspec.yaml");
+        exit(1);
+      }
+    } else {
+      startConfig('trconfig.yaml');
+    }
+  }
+}
+
+String pubSpecStr = '';
+Map pubSpecMap = {};
+
+/// Adds the json files directory. to pubspec.yaml assets.
+void addAssetsToPubSpec() {
+  if (pubSpecStr.isEmpty) {
+    readPubSpec();
+  }
+  var addAsset = p.dirname(config.outputJsonTemplate) + '/';
+  var out = pubSpecStr;
+  var assets = pubSpecMap['flutter']?['assets'];
+  var replacer = '';
+  if (assets == null) {
+    replacer = kNoAssetsReplace.replaceAll('##replace', addAsset);
+    out = out.replaceAll(kNoAssetsKey, replacer);
+  } else {
+    // check if the key is already added
+    var hasAsset = false;
+    if (assets is List) {
+      for (String asset in assets) {
+        if (asset.contains(addAsset)) {
+          hasAsset = true;
+        }
+      }
+    }
+    if (!hasAsset) {
+      replacer = kHasAssetsReplace.replaceAll('##replace', addAsset);
+      out = out.replaceAll(kHasAssetsKey, replacer);
+    }
+  }
+  if (out != pubSpecStr) {
+    saveString('pubspec.yaml', out);
+  }
+}
+
+/// Reads the pubspec.yaml file and stores it in [pubSpecStr] and [pubSpecMap]
+void readPubSpec() {
+  final file = File('pubspec.yaml');
+  if (!file.existsSync()) {
+    error("Can't locate pubspec.yaml, run fts from your project root.");
+    exit(3);
+  }
+  pubSpecStr = openString(file.path);
+  pubSpecMap = loadYaml(pubSpecStr) as Map;
+}
+
 /// Initializes the supplied configuration from [path]
 void startConfig(String path) {
   if (path.isEmpty) {
-    error('Pass the trconfig.yaml path to -c');
+    error(
+        'Pass the trconfig.yaml path to --config, or add `fts` to pubspec.yaml');
     exit(1);
   }
   var f = File(path);
@@ -235,7 +339,7 @@ void startConfig(String path) {
     /// ask to create from template.
     var useCreateTemplate = confirm(
         yellow(
-            'Do you wanna create the template trconfig.yaml in the current directory?'),
+            'Do you wanna create the template (trconfig.yaml) in the current directory?'),
         defaultValue: true);
     if (!useCreateTemplate) {
       var m1 = grey('${CliConfig.cliName} run', background: AnsiColor.black);
@@ -250,6 +354,8 @@ void startConfig(String path) {
       createSampleContent();
     }
   } else {
-    loadEnv(path);
+    loadEnv(
+      path: path,
+    );
   }
 }

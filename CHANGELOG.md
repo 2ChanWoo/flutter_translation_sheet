@@ -1,3 +1,49 @@
+## [1.0.26]
+- fix posix path issue (plutil cli call on macos when absolute paths have spaces)
+- improved `fts extract`, now skips captured text that's only number, a variable, or a group of chars that have no grapheme (in any charset). 
+- add locales to build.gradle resConfigs and android:localeConfig for Android 33+
+- added missing language codes from https://cloud.google.com/translate/docs/languages
+- added language code sanity check for the GoogleTranslate formula. (full Locales headers are supported now).
+
+## [1.0.25]
+- internal fix to check if its running locally in dev mode.
+- fix for Windows shell. (thanks @IsmailAlamKhan)
+- fixes on `Fts` when loading from json.
+
+## [1.0.24]
+- put back dependencies constrains for release.
+- put back `fts upgrade` code.
+
+## [1.0.23]
+- fix bug with empty `param_output_pattern` and `Fts.tr(namedArgs:)`
+- added `fts extract --exclude path1,pathN` to exclude paths from capture.
+- added `fts extract --clean` to remove duplicated records.
+- added `Fts.useMasterTextAsKey` to use master text as key for translation, for example `"Hello".tr()`
+- added `Fts.onSystemLocaleChanged` notifier, receives the events when the window detects a locale change (like on Android 13)
+- change pubspec dependencies to NOT force any constrains (and avoid errors on flutter pub get)
+- cleaned up code.
+- renamed SimpleLangPicker to LangPickerMaterial and added LangPickerCupertino
+
+## [1.0.22]
+- fix generated dart files format.
+- made "run" the default command when no arguments are passed.
+- add support for dev_dependencies.
+- add support to read the configuration (key `fts:`) from pubspec.
+- add support to read the configuration PATH (key `fts: "path.yaml"`) from pubspec.
+- fix some code formatting.
+- add support for auto-include json assets folder in pubspec.flutter.assets
+- add `Fts` (and utils) to quickly test the internationalization in your app. `output_fts_utils: true` in the configuration.
+- add support for `FTS_CREDENTIALS` environment variable.
+- hide vars files, rename `vars.lock` to `.vars.lock`
+- when `Fts` is used (.tr() extension), you can specify `fts_utils_args_pattern: "%s"` for not-named variables. 
+- add support for linked keys in vars, in the format {{@:title}}, fts does not include `param_output_pattern` in those cases.
+- add support to resolve linked keys in `Fts` at runtime.
+- add support to resolve linked keys at build time (add to root config `resolve_linked_keys: true`).
+ 
+
+## [1.0.21]
+- Fix: .arb variables not being generated.
+
 ## [1.0.20]
 - added CLI check and warning for Sheet locale to avoid potential errors with the formula.
 - updated README.

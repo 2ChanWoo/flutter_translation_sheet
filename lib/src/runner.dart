@@ -6,7 +6,9 @@ import 'package:dcli/dcli.dart';
 import 'package:io/io.dart';
 
 import 'data/strings.dart';
+import 'io/android_gen.dart';
 import 'io/io.dart';
+import 'utils/locales_list.dart';
 import 'utils/utils.dart';
 
 export 'data/strings.dart';
@@ -27,10 +29,8 @@ class FTSCommandRunner extends CommandRunner<int> {
     addCommand(GetAll(startFetchWithMasterLang));
     addCommand(RunCommand(startRun));
     addCommand(UpgradeCommand(checkUpdate));
-
-    /// add "init" command when it's ready.
-    // addCommand(InitCommand(initRun));
     addCommand(ExtractStringCommand(extractStrings));
+    addCommand(LocaleSelectionCommand(showGoogleLocaleList));
 
     argParser.addFlag(
       'version',
@@ -43,12 +43,12 @@ class FTSCommandRunner extends CommandRunner<int> {
   Future<int> run(Iterable<String> args) async {
     try {
       final _args = parse(args);
-      final cmd = _args.command?.name;
-      final res = await runCommand(_args) ?? ExitCode.success.code;
+      return await runCommand(_args) ?? ExitCode.success.code;
+      // final cmd = _args.command?.name;
       // if (cmd != 'upgrade') {
       //   await checkUpdate(false);
       // }
-      return res;
+      // return res;
     } catch (e) {
       error(e);
     }
@@ -74,13 +74,13 @@ class FTSCommandRunner extends CommandRunner<int> {
     } else {
       await execRun();
     }
-    exit(1);
+    exit(0);
   }
 
   /// executes the logic for `fts fetch`
   Future<void> startFetch() async {
     await runFetch();
-    exit(1);
+    exit(0);
   }
 
   /// executes the logic for `fts fetchwith`
@@ -136,6 +136,7 @@ class FTSCommandRunner extends CommandRunner<int> {
 
     /// add locales in iOS
     addLocalesInPlist();
+    addLocalesInAndroid();
     flutterHotReload();
     trace('👍 Sync process complete');
     isRunActive = false;
@@ -166,6 +167,7 @@ class FTSCommandRunner extends CommandRunner<int> {
 
     /// add locales in iOS
     addLocalesInPlist();
+    addLocalesInAndroid();
     flutterHotReload();
   }
 

@@ -35,13 +35,14 @@ void createLocalesFiles(
 
   if (saveJsonLocales) {
     trace('Saving json locales in ${config.jsonOutputDir}:');
+    addAssetsToPubSpec();
   }
 
   for (var localeKey in localesMap.keys) {
     // trace('Locale ', localeKey);
     var localeName = normLocale(localeKey);
     var localeMap = localesMap[localeKey]!;
-
+    // trace("Locale map: $localeKey / $localeMap");
     /// save json files.
     if (saveJsonLocales) {
       saveLocaleJsonAsset(    ///!  assets/i18n 에 locale.json 파일 생성.
@@ -87,6 +88,11 @@ abstract class $className {
     dartExportPaths.add(config.dartTranslationPath);
   }
 
+  if (config.dartOutputFtsUtils) {
+    createFtsUtilsFile();
+    dartExportPaths.add(config.dartFtsUtilsPath);
+  }
+
   /// create root file export for dartOutput dir.
   if (dartExportPaths.isNotEmpty) {
     /// create export file.
@@ -96,16 +102,91 @@ abstract class $className {
 
 ///!
 void createStringsYaml(List<List<String>> list) {
-  if(list.length != 2) return;
+  if (list.length != 2) return;
 
   String content = '';
-  for(int i=0; i < list[0].length; i++) {
-      if(i==0) continue;
+  for (int i = 0; i < list[0].length; i++) {
+    if (i == 0) continue;
 
-      content = content + '${list[0][i]}: '+'\"${list[1][i]}\"\n';
+    content = content + '${list[0][i]}: ' + '\"${list[1][i]}\"\n';
   }
 
   saveString(config.entryFile, content);
+}
+
+void createFtsUtilsFile() {
+  var fileContent = kFtsUtils;
+  // fileContent = fileContent.replaceAll('##importPath', import);
+
+  var resolveTranslationCode = '';
+  var imports = [
+    p.basename(config.dartOutputDir) + '.dart',
+    "package:flutter/widgets.dart",
+    "package:flutter/foundation.dart",
+  ];
+
+  if (config.hasOutputJsonDir) {
+    imports.addAll([
+      "dart:convert",
+      "package:flutter/foundation.dart",
+      "package:flutter/services.dart",
+    ]);
+
+    fileContent =
+        fileContent.replaceAll('##loadJsonSetLocale', kLoadJsonSetLocale);
+    fileContent =
+        fileContent.replaceAll('##loadJsonFallback', kLoadJsonFallback);
+    var loadJsonString = kLoadJsonMethod;
+
+    // var jsonOutput = config.outputJsonTemplate;
+    var jsonOutputDir = p.dirname(config.outputJsonTemplate) + '/';
+    loadJsonString = loadJsonString.replaceAll('##jsonDir', jsonOutputDir);
+    fileContent = fileContent.replaceAll('##loadJsonMethod', loadJsonString);
+
+    fileContent = fileContent.replaceAll(
+        '##decodeTranslationMethod', kDecodeTranslationMethod);
+    resolveTranslationCode = kResolveTranslationJson;
+  } else {
+    fileContent =
+        fileContent.replaceAll('##loadJsonSetLocale', '_notifyUpdate();');
+    fileContent = fileContent.replaceAll('##loadJsonFallback', '');
+    fileContent = fileContent.replaceAll('##loadJsonMethod', '');
+    fileContent = fileContent.replaceAll('##decodeTranslationMethod', '');
+    resolveTranslationCode = kResolveTranslationMap;
+  }
+
+  fileContent =
+      fileContent.replaceAll('##resolveTranslations', resolveTranslationCode);
+
+  fileContent = fileContent.replaceFirst(
+    '##argsPattern',
+    config.paramFtsUtilsArgsPattern,
+  );
+  fileContent =
+      fileContent.replaceAll('##tData', config.dartTranslationClassname);
+
+  var patt = config.paramOutputPattern;
+  if (patt.isEmpty || patt == '*') {
+    patt = '{*}';
+  }
+  patt = patt.replaceFirst('*', '\$key');
+  fileContent = fileContent.replaceFirst(
+    '##namedArgsPattern',
+    patt,
+  );
+
+  var importString = imports.map((e) => "import '$e';").join('\n');
+  fileContent = fileContent.replaceAll('##imports', importString);
+
+  saveString(config.dartFtsUtilsPath, fileContent);
+
+  // trace("Base name? ${}");
+  // exportPaths.sort();
+  // var fileContents = exportPaths
+  //     .map((path) => 'export "${p.relative(path, from: dir)}";')
+  //     .join('\n');
+  // var exportFilePath = p.join(dir, p.basename(dir) + '.dart');
+  // print("EXPORT PATH: $exportFilePath");
 }
 
 /// Generates the export file with the TKeys and TData files.
@@ -194,6 +275,7 @@ abstract class $_tClassName {
   var fileContent = '''
 // ignore_for_file: lines_longer_than_80_chars
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 $_imports
 
@@ -203,8 +285,11 @@ $_classAppLocales
 
 $_kLangVoTemplate
 
-/// demo widget
-$kSimpleLangPickerWidget
+/// demo widgets
+
+$kLangPickerMaterial
+
+$kLangPickerCupertino
 
 ''';
   if (save) {
@@ -223,6 +308,7 @@ abstract class AppLocales {
   final _fields = locales.map((String key) {
     // key = _cleanLocaleKey(key);
     key = normLocale(key);
+    var varName = _localeVarName(key, snake: false);
     var localName = _localeVarName(key);
     // var data = prettyJson(localeMap);
     // var localeInfo = langInfoFromKey(localeName);
@@ -234,15 +320,15 @@ abstract class AppLocales {
     final flagChar = langObj.emoji;
     final locale = _buildLocaleObjFromType(key);
     return '''
-  static const $localName = LangVo("$nativeName", "$englishName", "$localName", $locale, "$flagChar");''';
+  static const $varName = LangVo("$nativeName", "$englishName", "$localName", $locale, "$flagChar");''';
   }).join('\n');
 
   fileContent += _fields + '\n';
 
   final _supportedLocales =
-      locales.map((String key) => '${_localeVarName(key)}\.locale').join(',');
+      locales.map((String key) => '${_localeVarName(key,snake:false)}\.locale').join(',');
   final _availableLang =
-      locales.map((String key) => '${_localeVarName(key)}').join(',');
+      locales.map((String key) => '${_localeVarName(key,snake: false)}').join(',');
 
   fileContent += '  static const available = <LangVo>[$_availableLang];\n';
   fileContent +=
@@ -256,15 +342,21 @@ abstract class AppLocales {
 ''';
 
   fileContent += '''
-  static LangVo? of(Locale locale, [bool fullMatch = false]) {
+  static LangVo? of(Locale locale) {
+    var hasFullMatch = AppLocales.supportedLocales.contains(locale);
     for (final langVo in AppLocales.available) {
-      if ((!fullMatch && langVo.locale.languageCode == locale.languageCode) ||
-          langVo.locale == locale) {
-        return langVo;
+      if (hasFullMatch) {
+        if (langVo.locale == locale) {
+          return langVo;
+        }
+      } else {
+        if (langVo.locale.languageCode == locale.languageCode) {
+          return langVo;
+        }
       }
     }
     return null;
-  }  
+  }
 ''';
 
   fileContent += '}';
@@ -273,8 +365,12 @@ abstract class AppLocales {
 }
 
 /// Normalize locale [key] to match Flutter's.
-String _localeVarName(String key) {
-  return key.replaceAll('-', '_');
+String _localeVarName(String key, {bool snake=true}) {
+  key = key.replaceAll('-', '_');
+  if(!snake) {
+    key = key.replaceAll('_', '');
+  }
+  return key;
 }
 
 /// Generates the TKeys file from the [map].
@@ -470,11 +566,12 @@ void runPubGet() {
 void formatDartFiles() {
   /// format dart files.
   if (config.validTranslationFile || config.validTKeyFile) {
-    if (which('dartfmt').found) {
-      'dartfmt -w ${config.dartOutputDir}'.start(
-        workingDirectory: config.dartOutputDir,
+    if (which('flutter').found) {
+      // 'dartfmt -w ${config.dartOutputDir}'.start(
+      'flutter format --fix ${config.dartOutputDir}'.start(
+        // workingDirectory: config.dartOutputDir,
         detached: true,
-        runInShell: false,
+        runInShell: true,
       );
     }
   }
