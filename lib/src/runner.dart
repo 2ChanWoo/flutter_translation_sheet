@@ -88,7 +88,7 @@ class FTSCommandRunner extends CommandRunner<int> {
     await createStrings();
     print("------------------Created strings.yaml-------------------");
     await runFetch();
-    exit(1);
+    exit(0);
   }
 
   bool isRunActive = false;
