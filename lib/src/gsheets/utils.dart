@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:http/http.dart';
+
 import 'gsheets.dart';
 
 const dimenRows = 'ROWS';
@@ -9,17 +11,17 @@ const defaultRowsCount = 1000;
 const defaultColumnCount = 26;
 const gsheetsCellsLimit = 5000000;
 
-final int _char_a = 'A'.codeUnitAt(0);
+final int _charA = 'A'.codeUnitAt(0);
 
 String getColumnLetter(int index) {
   checkIndex('index', index);
   var number = index - 1;
   final remainder = number % 26;
-  var label = String.fromCharCode(_char_a + remainder);
+  var label = String.fromCharCode(_charA + remainder);
   number = number ~/ 26;
   while (number > 0) {
     var remainder = number % 26 - 1;
-    label = '${String.fromCharCode(_char_a + remainder)}$label';
+    label = '${String.fromCharCode(_charA + remainder)}$label';
     number = number ~/ 26;
   }
   return label;

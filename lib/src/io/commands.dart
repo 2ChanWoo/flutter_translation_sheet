@@ -1,10 +1,13 @@
 import 'dart:io';
 
+import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:dcli/dcli.dart';
 import 'package:flutter_translation_sheet/flutter_translation_sheet.dart';
-import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as p;
+import 'package:path/path.dart';
+import 'package:yaml/yaml.dart';
+
 import '../runner.dart';
 
 /// Command logic for `fts extract`
@@ -139,7 +142,8 @@ class UpgradeCommand extends Command<int> {
 /// Command logic for `fts locales`
 class LocaleSelectionCommand extends Command<int> {
   @override
-  final String description = 'Shows the list of supported languages codes for GoogleTranslate';
+  final String description =
+      'Shows the list of supported languages codes for GoogleTranslate';
 
   @override
   final String name = 'locales';
@@ -157,7 +161,6 @@ class LocaleSelectionCommand extends Command<int> {
     return 0;
   }
 }
-
 
 /// Command logic for `fts run`
 class RunCommand extends Command<int> {
@@ -287,7 +290,7 @@ void addAssetsToPubSpec() {
   if (pubSpecStr.isEmpty) {
     readPubSpec();
   }
-  var addAsset = p.dirname(config.outputJsonTemplate) + '/';
+  var addAsset = '${p.dirname(config.outputJsonTemplate)}/';
   var out = pubSpecStr;
   var assets = pubSpecMap['flutter']?['assets'];
   var replacer = '';

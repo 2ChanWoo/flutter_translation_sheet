@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dcli/dcli.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
+import 'package:path/path.dart';
 import 'package:yaml/yaml.dart';
 
 import '../data/strings.dart';
@@ -57,7 +58,7 @@ String? currentVersion() {
     if (str.isEmpty) return null;
     final data = loadYaml(str);
     if (data is YamlMap) {
-      return 'dev-' + data['version'];
+      return 'dev-${data['version']}';
     }
     return 'Could not find pubspec.yaml version in local enviroment.';
   }

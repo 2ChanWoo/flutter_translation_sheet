@@ -111,19 +111,23 @@ void _inspectRecursive(String path) {
         if (num.tryParse(val) != null) {
           continue;
         }
+
         /// skip only var text.
-        if(val.startsWith('{{') && val.endsWith('}}') && val.lastIndexOf('{{')==0){
+        if (val.startsWith('{{') &&
+            val.endsWith('}}') &&
+            val.lastIndexOf('{{') == 0) {
           continue;
         }
+
         /// skip whatever has no grapheme character in any text (like $21.99, --** #$!@ etc)
-        if(!_anyKindOfLetterRegExp.hasMatch(val)){
+        if (!_anyKindOfLetterRegExp.hasMatch(val)) {
           // print("skip $val");
           continue;
         }
 
-        var _key = key + 'text${j + 1}';
+        var key0 = '${key}text${j + 1}';
         ++j;
-        canoMap[_key] = val;
+        canoMap[key0] = val;
       }
     }
   }
@@ -171,14 +175,14 @@ void _inspectRecursive(String path) {
 String _getKey(String filepath) {
   /// all path (keys) relative to the -p (libFolder)
   var sub = p.relative(filepath, from: libFolder);
-  sub = p.withoutExtension(sub) + '.';
+  sub = '${p.withoutExtension(sub)}.';
   return p.split(sub).join('.');
 }
 
-var _regex4 = RegExp("\'.*?\'|\".*?\"", dotAll: false);
+var _regex4 = RegExp("'.*?'|\".*?\"", dotAll: false);
 var _regexMultiline = RegExp("('''.+''')|(\"\"\".+\"\"\")", dotAll: true);
 var _regexR1 = RegExp(r'(import|export) .*?;');
-var _pathRegExp = RegExp('(\/|.*\/)');
+var _pathRegExp = RegExp('(/|.*/)');
 final varMatching = RegExp(
   r'\$([^ ]*)',
   caseSensitive: false,
@@ -188,7 +192,9 @@ final varMatching = RegExp(
 final varReplacer = RegExp(r'[\$|\{\}]');
 
 /// matches any charset, but only graphemes (glyphs) are captured.
-final _anyKindOfLetterRegExp = RegExp(r'\p{L}', unicode: true, dotAll: true, caseSensitive: false);
+final _anyKindOfLetterRegExp =
+    RegExp(r'\p{L}', unicode: true, dotAll: true, caseSensitive: false);
+
 /// Reads [file] from the extraction recursion, using [populate] List to store
 /// the matching Strings.
 void _takeFile(File file, List<String> populate) {

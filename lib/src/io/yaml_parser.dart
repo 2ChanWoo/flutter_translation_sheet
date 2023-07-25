@@ -112,7 +112,7 @@ KeyMap _canoMap(Map<String, dynamic> content) { ///! content: strings.yaml이 Li
     for (var k in inner.keys) {
       if (k.startsWith('@')) {
         /// build meta key, for ARB files.
-        var metaKey = '@' + (prop + '.' + k.substring(1)).camelCase;
+        var metaKey = '@${('$prop.${k.substring(1)}').camelCase}';
         metaProperties[metaKey] = inner[k];
         trace('found metadata $k skip');
         continue;
@@ -121,7 +121,7 @@ KeyMap _canoMap(Map<String, dynamic> content) { ///! content: strings.yaml이 Li
         trace('"$k" has a null value');
       }
       var val = inner[k];
-      var p2 = prop.isEmpty ? k : prop + '.' + k; // 항상 "k" 로 반환되는거 아냐?
+      var p2 = prop.isEmpty ? k : '$prop.$k'; // 항상 "k" 로 반환되는거 아냐?
       if (val is Map) {
         buildKeys(val.cast(), p2);
       } else {
@@ -230,11 +230,11 @@ final _captureGoogleTranslateVar = RegExp(
   multiLine: false,
   caseSensitive: false,
 );
-final _captureInnerDigitVar = RegExp(
-  r'\d+',
-  multiLine: false,
-  caseSensitive: false,
-);
+// final _captureInnerDigitVar = RegExp(
+//   r'\d+',
+//   multiLine: false,
+//   caseSensitive: false,
+// );
 final _replaceAndLeaveDigitVar = RegExp(
   r'({+)|(}+)',
   multiLine: false,
@@ -254,20 +254,20 @@ String replaceVars(VarsCap vars) {
     // Replacing
     var words = wordset.toList();
     for (var i = 0; i < words.length; i++) {
-      var _key = words[i];
-      var key = _key.replaceAll(_replaceAndLeaveDigitVar, '');
+      var key0 = words[i];
+      var key = key0.replaceAll(_replaceAndLeaveDigitVar, '');
       var value = vars.vars[key]!;
       if (value.startsWith('@:')) {
         /// If we resolve linked keys we play safe with the key.
         if (config.resolveLinkedKeys) {
-          str = str.replaceAll(_key, '$value#');
+          str = str.replaceAll(key0, '$value#');
         } else {
-          str = str.replaceAll(_key, '$value');
+          str = str.replaceAll(key0, value);
         }
       } else {
         //// special characters taken in account?
         // value = value.replaceAll(r'$', '\\\$');
-        str = str.replaceAll(_key, '$start$value$end');
+        str = str.replaceAll(key0, '$start$value$end');
       }
     }
   }
