@@ -18,8 +18,8 @@ dependencies:
   args: ^2.4.1
   collection: ^1.17.2
   dcli: ^2.2.2
-  googleapis: ^11.1.0
-  googleapis_auth: ^1.4.0
+  googleapis: 11.3.0
+  googleapis_auth: 1.4.0
   http: ^0.13.6
   io: ^1.0.4
   path: ^1.8.3

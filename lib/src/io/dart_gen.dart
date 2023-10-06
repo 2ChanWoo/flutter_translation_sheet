@@ -17,6 +17,21 @@ class LangVo {
 }
 ''';
 
+///!
+void createStringsYaml(List<List<String>> list) {
+  if(list.length != 2) return;
+
+  String content = '';
+  for(int i=0; i < list[0].length; i++) {
+    if(i==0) continue;
+
+    content = content + '${list[0][i]}: '+'\"${list[1][i]}\"\n';
+  }
+
+  saveString(config.entryFile, content);
+}
+
+
 /// Generates the json and dart files according to [EnvConfig].
 void createLocalesFiles(
   Map<String, Map<String, String>> localesMap,

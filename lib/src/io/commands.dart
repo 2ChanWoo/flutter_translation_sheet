@@ -10,6 +10,28 @@ import 'package:yaml/yaml.dart';
 
 import '../runner.dart';
 
+/// Command logic for `fts getAll`
+class GetAll extends Command<int> {
+  @override
+  final String description = 'getAll the data from the sheet';
+
+  @override
+  final String name = 'getAll';
+  final Future Function() exec;
+
+  GetAll(this.exec) {
+    addConfigOption(argParser);
+  }
+
+  @override
+  Future<int> run() async {
+    setConfig(argResults!);
+    await exec(); // runner.dart 에서 run~() 메서드들
+    return 0;
+  }
+}
+
+
 /// Command logic for `fts extract`
 class ExtractStringCommand extends Command<int> {
   @override
@@ -50,6 +72,7 @@ class ExtractStringCommand extends Command<int> {
             'Toggles permissive mode, capturing strings without spaces in it.');
     // addConfigOption(argParser);
   }
+
 
   @override
   Future<int> run() async {
